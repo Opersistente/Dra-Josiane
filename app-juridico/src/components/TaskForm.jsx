@@ -46,14 +46,14 @@ export default function TaskForm({ onClose }) {
 
                     <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">Ação / Tarefa</label>
-                        <input
+                        <textarea
                             required
-                            type="text"
+                            rows="3"
                             value={formData.tarefa}
                             onChange={e => setFormData({ ...formData, tarefa: e.target.value })}
-                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
+                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm resize-none custom-scrollbar"
                             placeholder="Ex: Informar novo endereço"
-                        />
+                        ></textarea>
                     </div>
 
                     <div className="flex gap-4">

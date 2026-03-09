@@ -16,10 +16,12 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-reac
 import { useTaskStore } from '../store/useTaskStore';
 import { getPriorityColor, calcularPrioridade } from '../lib/priority';
 import EditTaskModal from '../components/EditTaskModal';
+import DailyScheduleModal from '../components/DailyScheduleModal';
 
 export default function CalendarView() {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [editingTask, setEditingTask] = useState(null);
+    const [selectedDailyDate, setSelectedDailyDate] = useState(null);
     const { tarefas } = useTaskStore();
 
     const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
@@ -54,7 +56,8 @@ export default function CalendarView() {
             days.push(
                 <div
                     key={`cal-day-${targetDateStr}`}
-                    className={`min-h-[120px] p-2 border-r border-b border-slate-200 flex flex-col transition-colors ${!isSameMonth(cloneDay, monthStart)
+                    onClick={() => setSelectedDailyDate(targetDateStr)}
+                    className={`min-h-[120px] p-2 border-r border-b border-slate-200 flex flex-col transition-colors cursor-pointer ${!isSameMonth(cloneDay, monthStart)
                         ? "bg-slate-50/50 text-slate-400"
                         : isSameDay(cloneDay, new Date())
                             ? "bg-blue-50/30 text-blue-600 font-semibold"
@@ -78,7 +81,10 @@ export default function CalendarView() {
                             return (
                                 <div
                                     key={task.id}
-                                    onClick={() => setEditingTask(task)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setEditingTask(task);
+                                    }}
                                     className={`text-xs p-1.5 rounded border cursor-pointer hover:shadow-sm transition-all truncate ${prioColor}`}
                                     title={`${task.cliente} - ${task.tarefa}`}
                                 >
@@ -97,17 +103,17 @@ export default function CalendarView() {
     const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
     return (
-        <div className="p-8 max-w-full mx-auto h-full flex flex-col">
-            <div className="flex justify-between items-center mb-6 shrink-0">
+        <div className="p-4 md:p-8 max-w-full mx-auto h-full flex flex-col">
+            <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center mb-6 shrink-0 w-full">
                 <div>
-                    <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight flex items-center gap-3">
+                    <h1 className="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-tight flex items-center gap-3">
                         <CalendarIcon size={28} className="text-blue-600" />
                         Calendário de Prazos
                     </h1>
-                    <p className="text-slate-500 mt-2 text-sm max-w-xl">Visualize sua distribuição de tarefas mensais para equilibrar o peso do trabalho.</p>
+                    <p className="text-slate-500 mt-2 text-xs md:text-sm max-w-xl">Visualize sua distribuição de tarefas mensais para equilibrar o peso do trabalho.</p>
                 </div>
 
-                <div className="flex gap-4 items-center bg-white border border-slate-200 rounded-xl p-1.5 shadow-sm">
+                <div className="flex gap-2 md:gap-4 items-center bg-white border border-slate-200 rounded-xl p-1.5 shadow-sm w-full md:w-auto space-between md:justify-start">
                     <button onClick={prevMonth} className="p-2 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors">
                         <ChevronLeft size={20} />
                     </button>
@@ -121,18 +127,22 @@ export default function CalendarView() {
             </div>
 
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex-1 flex flex-col">
-                {/* Calendar Header */}
-                <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50/80 shrink-0">
-                    {weekDays.map(dia => (
-                        <div key={dia} className="py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider border-r border-slate-200 last:border-r-0">
-                            {dia}
+                <div className="overflow-x-auto flex-1 flex flex-col custom-scrollbar">
+                    <div className="min-w-[800px] flex-1 flex flex-col">
+                        {/* Calendar Header */}
+                        <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50/80 shrink-0">
+                            {weekDays.map(dia => (
+                                <div key={dia} className="py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider border-r border-slate-200 last:border-r-0">
+                                    {dia}
+                                </div>
+                            ))}
                         </div>
-                    ))}
-                </div>
 
-                {/* Calendar Grid */}
-                <div className="grid grid-cols-7 flex-1 overflow-y-auto auto-rows-[minmax(120px,1fr)]">
-                    {days}
+                        {/* Calendar Grid */}
+                        <div className="grid grid-cols-7 flex-1 overflow-y-auto auto-rows-[minmax(120px,1fr)]">
+                            {days}
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -140,6 +150,13 @@ export default function CalendarView() {
                 <EditTaskModal
                     tarefa={editingTask}
                     onClose={() => setEditingTask(null)}
+                />
+            )}
+
+            {selectedDailyDate && (
+                <DailyScheduleModal
+                    dateStr={selectedDailyDate}
+                    onClose={() => setSelectedDailyDate(null)}
                 />
             )}
         </div>

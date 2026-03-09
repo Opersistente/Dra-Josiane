@@ -12,7 +12,8 @@ export default function TaskCard({ tarefa, compact = false }) {
     const [isEditing, setIsEditing] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    const handleDelete = async () => {
+    const handleDelete = async (e) => {
+        e.stopPropagation();
         if (window.confirm(`Tem certeza que deseja excluir:\n"${tarefa.tarefa}"?`)) {
             setIsDeleting(true);
             await deleteTarefa(tarefa.id);
@@ -20,11 +21,19 @@ export default function TaskCard({ tarefa, compact = false }) {
         }
     };
 
+    const handleEditClick = (e) => {
+        e.stopPropagation();
+        setIsEditing(true);
+    };
+
     const isCrucial = prioridade === 'URGENTE' || tarefa.status === 'Audiência';
 
     return (
         <>
-            <div className={`bg-white rounded-xl shadow-sm border relative p-4 transition-all hover:shadow-md group ${compact ? 'py-3' : ''} ${isDeleting ? 'opacity-50 pointer-events-none' : ''} ${isCrucial ? 'border-red-500 ring-4 ring-red-100 animate-[pulse_2s_ease-in-out_infinite]' : 'border-slate-200'}`}>
+            <div
+                onClick={() => setIsEditing(true)}
+                className={`bg-white rounded-xl shadow-sm border relative p-4 transition-all hover:shadow-md cursor-pointer group ${compact ? 'py-3' : ''} ${isDeleting ? 'opacity-50 pointer-events-none' : ''} ${isCrucial ? 'border-red-500 ring-4 ring-red-100 animate-[pulse_2s_ease-in-out_infinite]' : 'border-slate-200'}`}
+            >
 
                 {isDeleting && (
                     <div className="absolute inset-0 bg-white/70 backdrop-blur-sm z-10 flex items-center justify-center rounded-xl">
@@ -45,7 +54,7 @@ export default function TaskCard({ tarefa, compact = false }) {
                     </div>
                     <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
-                            onClick={() => setIsEditing(true)}
+                            onClick={handleEditClick}
                             className="text-slate-400 hover:text-blue-500 transition-colors bg-white hover:bg-slate-50 rounded-full p-1 border border-transparent hover:border-slate-200 shadow-sm"
                             title="Editar tarefa"
                         >

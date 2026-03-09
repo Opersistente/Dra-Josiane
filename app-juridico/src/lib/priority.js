@@ -10,7 +10,7 @@ export function calcularPrioridade(prazo, isUrgente = false) {
     const diff = differenceInDays(dataPrazo, hoje);
 
     if (diff < 0) return "URGENTE";
-    if (diff === 0 || diff === 1) return "HOJE";
+    if (diff === 0) return "HOJE";
     if (diff <= 3) return "ALTA";
     if (diff <= 7) return "MÉDIA";
 

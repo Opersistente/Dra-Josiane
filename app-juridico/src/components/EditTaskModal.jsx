@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTaskStore } from '../store/useTaskStore';
 import { X, Save, Trash2 } from 'lucide-react';
 
@@ -33,9 +34,10 @@ export default function EditTaskModal({ tarefa, onClose }) {
         }
     };
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+    return createPortal(
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
             <div
+                onClick={e => e.stopPropagation()}
                 className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md border border-slate-200 relative animate-in zoom-in-95 duration-200"
             >
                 <button
@@ -61,13 +63,13 @@ export default function EditTaskModal({ tarefa, onClose }) {
 
                     <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">Ação / Tarefa</label>
-                        <input
+                        <textarea
                             required
-                            type="text"
+                            rows="4"
                             value={formData.tarefa}
                             onChange={e => setFormData({ ...formData, tarefa: e.target.value })}
-                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                        />
+                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none custom-scrollbar"
+                        ></textarea>
                     </div>
 
                     <div className="flex gap-4">
@@ -141,6 +143,7 @@ export default function EditTaskModal({ tarefa, onClose }) {
                     </div>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

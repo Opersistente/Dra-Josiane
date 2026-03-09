@@ -126,4 +126,27 @@ export const useTaskStore = create((set, get) => ({
             }));
         }
     },
+
+    moveTarefaHora: async (id, novaHora) => {
+        const previousTask = get().tarefas.find(t => t.id === id);
+        const previousHora = previousTask.hora_agendada;
+
+        // Fast local mutation
+        set((state) => ({
+            tarefas: state.tarefas.map(t => t.id === id ? { ...t, hora_agendada: novaHora } : t)
+        }));
+
+        const { error } = await supabase
+            .from('tarefas')
+            .update({ hora_agendada: novaHora })
+            .eq('id', id);
+
+        if (error) {
+            console.error('Error moving task time', error);
+            // Revert
+            set((state) => ({
+                tarefas: state.tarefas.map(t => t.id === id ? { ...t, hora_agendada: previousHora } : t)
+            }));
+        }
+    },
 }));

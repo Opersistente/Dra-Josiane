@@ -70,11 +70,11 @@ export default function Kanban() {
     const activeTask = activeId ? tarefas.find(t => t.id === activeId) : null;
 
     return (
-        <div className="p-8 h-full flex flex-col max-w-full overflow-hidden">
-            <div className="mb-6 shrink-0 flex justify-between items-start">
+        <div className="p-4 md:p-8 h-full flex flex-col max-w-full overflow-hidden">
+            <div className="mb-6 shrink-0 flex flex-col md:flex-row gap-4 md:justify-between items-start">
                 <div>
-                    <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Quadro Kanban</h1>
-                    <p className="text-slate-500 mt-2 text-sm max-w-xl">Acompanhe o fluxo visual do escritório. Arraste e solte os cartões para atualizar o andamento.</p>
+                    <h1 className="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-tight">Quadro Kanban</h1>
+                    <p className="text-slate-500 mt-2 text-xs md:text-sm max-w-xl">Acompanhe o fluxo visual do escritório. Arraste e solte os cartões para atualizar o andamento.</p>
                 </div>
 
                 <button
