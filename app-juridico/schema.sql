@@ -1,0 +1,1 @@
+create table tarefas ( id uuid default gen_random_uuid() primary key, cliente text collate ""default"" not null, tarefa text collate ""default"" not null, prazo date not null, status text collate ""default"" not null, created_at timestamp with time zone default timezone('utc'::text, now()) not null ); 
