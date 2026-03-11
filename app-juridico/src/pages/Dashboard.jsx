@@ -36,8 +36,8 @@ export default function Dashboard({ setActiveTab }) {
     const taxaConclusao = kpiConcluidosMes > 0 && rawTaxa === 0 ? 1 : rawTaxa;
 
     return (
-        <div className="p-4 md:p-8 max-w-7xl mx-auto h-full overflow-y-auto">
-            <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center mb-6">
+        <div className="p-4 md:p-8 max-w-7xl mx-auto h-full flex flex-col">
+            <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center mb-6 shrink-0">
                 <div>
                     <h1 className="text-2xl font-extrabold text-slate-800 tracking-tight">Painel Executivo</h1>
                 </div>
@@ -61,7 +61,7 @@ export default function Dashboard({ setActiveTab }) {
             </div>
 
             {/* Painel de Controle (BI) */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 shrink-0">
                 {/* Métricas: Processos Ativos */}
                 <div
                     onClick={() => setActiveTab('kanban')}
@@ -121,46 +121,46 @@ export default function Dashboard({ setActiveTab }) {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1 min-h-0">
                 {/* Coluna 1: Foco do Dia (Urgentes) */}
-                <div className="space-y-8">
-                    <section>
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="bg-red-100 p-2 rounded-lg text-red-600 shadow-sm"><AlertCircle size={20} /></div>
-                            <h2 className="text-xl font-bold text-slate-800">Urgentes <span className="text-sm font-medium text-slate-400 ml-2">Prazos vencidos ou fixados</span></h2>
-                        </div>
+                <div className="flex flex-col bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden h-full shadow-sm">
+                    <div className="flex items-center gap-3 p-4 border-b border-slate-200 bg-white shrink-0">
+                        <div className="bg-red-100 p-2 rounded-lg text-red-600 shadow-sm"><AlertCircle size={20} /></div>
+                        <h2 className="text-xl font-bold text-slate-800">Urgentes <span className="text-sm font-medium text-slate-400 ml-2 hidden sm:inline">Prazos vencidos ou fixados</span></h2>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                         {urgentes.length === 0 ? (
-                            <div className="bg-white border border-slate-200 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-slate-500">
+                            <div className="bg-white border border-slate-200 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-slate-500 h-full">
                                 <ShieldCheck size={32} className="text-emerald-500 mb-3" />
                                 <p className="font-medium text-slate-700">Nenhuma prioridade crítica!</p>
                                 <p className="text-sm">Excelente trabalho mantendo tudo em dia. 🎉</p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 gap-4">
-                                {urgentes.map(t => <TaskCard key={t.id} tarefa={t} />)}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 items-start relative">
+                                {urgentes.map(t => <TaskCard key={t.id} tarefa={t} dashboardMode={true} floatExpand={true} />)}
                             </div>
                         )}
-                    </section>
+                    </div>
                 </div>
 
                 {/* Coluna 2: Foco de Hoje */}
-                <div className="space-y-8">
-                    <section>
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="bg-orange-100 p-2 rounded-lg text-orange-600 shadow-sm"><CalendarClock size={20} /></div>
-                            <h2 className="text-xl font-bold text-slate-800">Urgência para Hoje <span className="text-sm font-medium text-slate-400 ml-2">Vencendo hoje mesmo</span></h2>
-                        </div>
+                <div className="flex flex-col bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden h-full shadow-sm">
+                    <div className="flex items-center gap-3 p-4 border-b border-slate-200 bg-white shrink-0">
+                        <div className="bg-orange-100 p-2 rounded-lg text-orange-600 shadow-sm"><CalendarClock size={20} /></div>
+                        <h2 className="text-xl font-bold text-slate-800">Urgência para Hoje <span className="text-sm font-medium text-slate-400 ml-2 hidden sm:inline">Vencendo hoje mesmo</span></h2>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                         {hoje.length === 0 ? (
-                            <div className="bg-white border border-slate-200 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-slate-500">
+                            <div className="bg-white border border-slate-200 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-slate-500 h-full">
                                 <p className="font-medium text-slate-700">Tudo limpo por aqui</p>
                                 <p className="text-sm mt-1">Nenhum prazo limite para hoje.</p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 gap-4">
-                                {hoje.map(t => <TaskCard key={t.id} tarefa={t} />)}
+                            <div className="grid grid-cols-1 gap-3 items-start">
+                                {hoje.map(t => <TaskCard key={t.id} tarefa={t} compact />)}
                             </div>
                         )}
-                    </section>
+                    </div>
                 </div>
             </div>
 

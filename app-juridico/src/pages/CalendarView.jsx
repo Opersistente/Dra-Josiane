@@ -85,7 +85,7 @@ export default function CalendarView() {
                                         e.stopPropagation();
                                         setEditingTask(task);
                                     }}
-                                    className={`text-xs p-1.5 rounded border cursor-pointer hover:shadow-sm transition-all truncate ${prioColor}`}
+                                    className={`text-xs p-1.5 rounded border cursor-pointer hover:shadow-sm transition-all truncate ${prioColor} ${task.status === 'Concluído' ? 'opacity-50 grayscale hover:opacity-80 border-dashed line-through text-slate-500 bg-slate-100' : ''}`}
                                     title={`${task.cliente} - ${task.tarefa}`}
                                 >
                                     <span className="font-bold mr-1">{task.is_urgente ? '🚨' : ''}</span>
