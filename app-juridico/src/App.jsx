@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, KanbanSquare, Scale } from 'lucide-react';
+import { LayoutDashboard, KanbanSquare } from 'lucide-react';
+import josiImage from './images/Josi Pixar + Foca.png';
 import Dashboard from './pages/Dashboard';
 import Kanban from './pages/Kanban';
 import CalendarView from './pages/CalendarView';
@@ -19,9 +20,7 @@ function App() {
       <aside className="w-full md:w-64 bg-white border-t md:border-t-0 md:border-r border-slate-200 flex flex-row md:flex-col order-last md:order-first shrink-0 z-50 shadow-md md:shadow-none">
         {/* Header - Hidden on Mobile, Visible on Desktop */}
         <div className="hidden md:flex p-6 border-b border-slate-200 items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-700 to-indigo-500 shadow-md flex items-center justify-center text-white">
-            <Scale size={20} strokeWidth={2.5} />
-          </div>
+          <img src={josiImage} alt="Dra Josiane" className="w-24 h-24 rounded-xl shadow-md" />
           <div>
             <h1 className="text-lg font-bold tracking-tight text-slate-800 leading-tight border-b-2 border-indigo-600 inline-block">Dra Josiane</h1>
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mt-1">Novaes</p>
