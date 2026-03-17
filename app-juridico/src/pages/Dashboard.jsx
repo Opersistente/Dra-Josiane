@@ -1,15 +1,82 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTaskStore } from '../store/useTaskStore';
 import { calcularPrioridade } from '../lib/priority';
 import TaskCard from '../components/TaskCard';
 import TaskForm from '../components/TaskForm';
-import { AlertCircle, CalendarClock, Target, Plus, ShieldCheck, Activity, Users, CheckCircle2, FileDown, Clock } from 'lucide-react';
-import { isThisMonth, parseISO } from 'date-fns';
+import { AlertCircle, CalendarClock, Target, Plus, ShieldCheck, Activity, Users, CheckCircle2, FileDown, Download, Clock, X } from 'lucide-react';
+import { format, isThisMonth, parseISO, startOfWeek, endOfWeek } from 'date-fns';
 import { generateTasksPDF } from '../lib/pdfGenerator';
+import { exportTasksToCsv } from '../lib/csvExporter';
+import { exportTasksToJson } from '../lib/jsonExporter';
 
 export default function Dashboard({ setActiveTab }) {
     const { tarefas } = useTaskStore();
     const [showForm, setShowForm] = useState(false);
+    const [showReportModal, setShowReportModal] = useState(false);
+    const [reportPeriodo, setReportPeriodo] = useState('dia');
+    const [reportDate, setReportDate] = useState(() => new Date().toLocaleDateString('en-CA'));
+    const [reportStatuses, setReportStatuses] = useState([]);
+    const [reportMessage, setReportMessage] = useState(null);
+    const [reportMessageType, setReportMessageType] = useState('success');
+
+    const availableStatuses = useMemo(() => {
+        return Array.from(new Set(tarefas.map(t => t.status).filter(Boolean))).sort();
+    }, [tarefas]);
+
+    // Default to all known statuses on first load, if none selected yet
+    useEffect(() => {
+        if (availableStatuses.length > 0 && reportStatuses.length === 0) {
+            setReportStatuses(availableStatuses);
+        }
+    }, [availableStatuses, reportStatuses.length]);
+
+    const toggleStatus = (status) => {
+        setReportStatuses(prev =>
+            prev.includes(status)
+                ? prev.filter(s => s !== status)
+                : [...prev, status]
+        );
+    };
+
+    const getRange = (periodo, referenceDate) => {
+        const today = referenceDate ? new Date(referenceDate) : new Date();
+        if (periodo === 'semana') {
+            const start = startOfWeek(today, { weekStartsOn: 1 });
+            const end = endOfWeek(today, { weekStartsOn: 1 });
+            return { start, end };
+        }
+        if (periodo === 'mes') {
+            const start = new Date(today.getFullYear(), today.getMonth(), 1);
+            const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            return { start, end };
+        }
+        const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const end = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
+        return { start, end };
+    };
+
+    const previewCount = useMemo(() => {
+        if (!reportStatuses.length) return 0;
+        const { start, end } = getRange(reportPeriodo, reportDate);
+        return tarefas.filter(t => {
+            if (!t.prazo) return false;
+            if (!reportStatuses.includes(t.status)) return false;
+            const taskDate = new Date(`${t.prazo}T00:00:00`);
+            return taskDate >= start && taskDate <= end;
+        }).length;
+    }, [tarefas, reportPeriodo, reportDate, reportStatuses]);
+
+    useEffect(() => {
+        if (!reportMessage) return;
+        const timer = setTimeout(() => setReportMessage(null), 4800);
+        return () => clearTimeout(timer);
+    }, [reportMessage]);
+
+    useEffect(() => {
+        if (showReportModal) {
+            setReportDate(new Date().toLocaleDateString('en-CA'));
+        }
+    }, [showReportModal]);
 
     // Filtros
     // calcularPrioridade já retorna 'URGENTE' se a tarefa estiver marcada com is_urgente = true
@@ -40,15 +107,39 @@ export default function Dashboard({ setActiveTab }) {
             <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center mb-6 shrink-0">
                 <div>
                     <h1 className="text-2xl font-extrabold text-slate-800 tracking-tight">Painel Executivo</h1>
+                    {reportMessage && (
+                        <div className={`mt-2 inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium ${reportMessageType === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
+                            <span className="truncate">{reportMessage}</span>
+                        </div>
+                    )}
                 </div>
                 <div className="flex flex-wrap md:flex-nowrap items-center gap-3 w-full md:w-auto">
                     <button
-                        onClick={() => generateTasksPDF(tarefas)}
+                        onClick={() => {
+                            setReportMessage(null);
+                            setShowReportModal(true);
+                        }}
                         className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 px-4 py-2.5 rounded-xl font-medium transition-all shadow-sm flex items-center gap-2 shrink-0"
-                        title="Exportar todas as tarefas ativas para PDF"
+                        title="Gerar relatório PDF por dia, semana ou mês"
                     >
                         <FileDown size={18} className="text-slate-500" />
                         Relatório PDF
+                    </button>
+                    <button
+                        onClick={() => exportTasksToCsv(tarefas)}
+                        className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 px-4 py-2.5 rounded-xl font-medium transition-all shadow-sm flex items-center gap-2 shrink-0"
+                        title="Gerar backup da base em CSV"
+                    >
+                        <Download size={18} className="text-slate-500" />
+                        Backup CSV
+                    </button>
+                    <button
+                        onClick={() => exportTasksToJson(tarefas)}
+                        className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 px-4 py-2.5 rounded-xl font-medium transition-all shadow-sm flex items-center gap-2 shrink-0"
+                        title="Gerar backup da base em JSON"
+                    >
+                        <Download size={18} className="text-slate-500" />
+                        Backup JSON
                     </button>
                     <button
                         onClick={() => setShowForm(true)}
@@ -167,6 +258,130 @@ export default function Dashboard({ setActiveTab }) {
             {/* Modal de Nova Tarefa Sobreposto */}
             {showForm && (
                 <TaskForm onClose={() => setShowForm(false)} />
+            )}
+
+            {showReportModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white p-6 rounded-2xl shadow-xl border border-slate-200 w-full max-w-md relative animate-in zoom-in-95 duration-200">
+                        <button
+                            onClick={() => setShowReportModal(false)}
+                            className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 transition-colors p-1"
+                        >
+                            <X size={20} />
+                        </button>
+
+                        <h3 className="text-xl font-bold text-slate-800 mb-4">Gerar Relatório PDF</h3>
+                        <p className="text-sm text-slate-600 mb-4">Escolha o período que deseja incluir no relatório.</p>
+
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-3 gap-2">
+                                <label className={`cursor-pointer rounded-xl border p-3 text-center transition ${reportPeriodo === 'dia' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}>
+                                    <input
+                                        type="radio"
+                                        name="reportPeriodo"
+                                        value="dia"
+                                        checked={reportPeriodo === 'dia'}
+                                        onChange={() => setReportPeriodo('dia')}
+                                        className="hidden"
+                                    />
+                                    <div className="text-sm font-semibold">Dia</div>
+                                    <div className="text-xs text-slate-500">Só hoje</div>
+                                </label>
+                                <label className={`cursor-pointer rounded-xl border p-3 text-center transition ${reportPeriodo === 'semana' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}>
+                                    <input
+                                        type="radio"
+                                        name="reportPeriodo"
+                                        value="semana"
+                                        checked={reportPeriodo === 'semana'}
+                                        onChange={() => setReportPeriodo('semana')}
+                                        className="hidden"
+                                    />
+                                    <div className="text-sm font-semibold">Semana</div>
+                                    <div className="text-xs text-slate-500">Segunda a domingo</div>
+                                </label>
+                                <label className={`cursor-pointer rounded-xl border p-3 text-center transition ${reportPeriodo === 'mes' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}>
+                                    <input
+                                        type="radio"
+                                        name="reportPeriodo"
+                                        value="mes"
+                                        checked={reportPeriodo === 'mes'}
+                                        onChange={() => setReportPeriodo('mes')}
+                                        className="hidden"
+                                    />
+                                    <div className="text-sm font-semibold">Mês</div>
+                                    <div className="text-xs text-slate-500">Mês atual</div>
+                                </label>
+                            </div>
+
+                            <div className="mt-4">
+                                <p className="text-sm font-semibold text-slate-700 mb-2">Status incluídos</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {availableStatuses.map(status => (
+                                        <button
+                                            key={status}
+                                            type="button"
+                                            onClick={() => toggleStatus(status)}
+                                            className={`px-3 py-2 rounded-full border text-xs font-semibold transition ${reportStatuses.includes(status)
+                                                ? 'bg-blue-50 border-blue-300 text-blue-700'
+                                                : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                                            }`}
+                                        >
+                                            {status}
+                                        </button>
+                                    ))}
+                                </div>
+                                <p className="text-xs text-slate-500 mt-2">Itens combinados: <span className="font-semibold text-slate-700">{previewCount}</span></p>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Data de referência</label>
+                                <input
+                                    type="date"
+                                    value={reportDate}
+                                    onChange={e => setReportDate(e.target.value)}
+                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-end gap-3 pt-2">
+                                <button
+                                    onClick={() => setShowReportModal(false)}
+                                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-medium transition-all"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        if (previewCount === 0) {
+                                            setReportMessage('Nenhum registro encontrado para o período/filtragem escolhidos');
+                                            setReportMessageType('error');
+                                            return;
+                                        }
+
+                                        const result = generateTasksPDF(tarefas, {
+                                            periodo: reportPeriodo,
+                                            referenceDate: reportDate,
+                                            statuses: reportStatuses,
+                                        });
+
+                                        if (result.ok) {
+                                            setReportMessage('Relatório PDF gerado com sucesso!');
+                                            setReportMessageType('success');
+                                            setShowReportModal(false);
+                                        } else {
+                                            setReportMessage(`Falha ao gerar o PDF: ${result.message || 'verifique o console'}`);
+                                            setReportMessageType('error');
+                                        }
+                                    }}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-medium transition-all flex items-center gap-2"
+                                >
+                                    <FileDown size={16} />
+                                    Gerar PDF
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );
