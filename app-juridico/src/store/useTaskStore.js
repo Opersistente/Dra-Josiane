@@ -48,38 +48,16 @@ export const useTaskStore = create((set, get) => ({
                 .order('created_at', { ascending: false });
 
             // If we have a logged-in user (not admin), filter down to tasks assigned to them.
-            if (!isAdmin && userId) {
-                const filters = [];
-                if (userEmail) filters.push(`assigned_to_email.eq.${userEmail}`);
-                filters.push(`user_id.eq.${userId}`);
-                query = query.or(filters.join(','));
+            if (!isAdmin && userEmail) {
+                query = query.eq('assigned_to_email', userEmail);
             }
 
             const { data, error } = await query;
 
             if (error) {
-                // If one of the columns doesn't exist, try falling back to whichever does.
-                const missingUserId = error.details?.includes('column "user_id" does not exist');
-                const missingAssignedTo = error.details?.includes('column "assigned_to_email" does not exist');
-
-                if (!isAdmin && (missingUserId || missingAssignedTo)) {
-                    let fallbackQuery = supabase
-                        .from('tarefas')
-                        .select('*')
-                        .order('created_at', { ascending: false });
-
-                    if (!missingUserId && userId) {
-                        fallbackQuery = fallbackQuery.eq('user_id', userId);
-                    } else if (!missingAssignedTo && userEmail) {
-                        fallbackQuery = fallbackQuery.eq('assigned_to_email', userEmail);
-                    }
-
-                    const { data: fallbackData, error: fallbackError } = await fallbackQuery;
-                    if (fallbackError) {
-                        throw fallbackError;
-                    }
-
-                    set({ tarefas: fallbackData || [], loading: false });
+                // If assigned_to_email column doesn't exist, return empty for now
+                if (error.details?.includes('column "assigned_to_email" does not exist')) {
+                    set({ tarefas: [], loading: false });
                     return;
                 }
 
