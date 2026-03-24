@@ -82,6 +82,15 @@ export default function TaskCard({ tarefa, compact = false, dashboardMode = fals
                         <span className={`truncate ${dashboardMode ? 'group-hover:whitespace-normal group-hover:break-all' : ''}`}>{tarefa.cliente}</span>
                     </div>
 
+                    {tarefa.assigned_to_email && (
+                        <div className="flex items-center gap-2 mb-1 text-xs text-slate-500">
+                            <User size={14} className="text-slate-400 shrink-0" />
+                            <span className={`truncate ${dashboardMode ? 'group-hover:whitespace-normal group-hover:break-all' : ''}`}>
+                                Responsável: {tarefa.assigned_to_email}
+                            </span>
+                        </div>
+                    )}
+
                     <div className={`flex items-start gap-2 text-slate-600 text-sm overflow-hidden transition-all ${dashboardMode ? 'max-h-0 opacity-0 group-hover:max-h-[500px] group-hover:opacity-100 group-hover:mt-2 group-hover:mb-3' : 'mb-3'}`}>
                         <FileText size={16} className="text-slate-400 shrink-0 mt-0.5" />
                         <span className={`leading-tight ${dashboardMode ? '' : 'line-clamp-2'} ${tarefa.status === 'Concluído' ? 'line-through text-slate-400' : ''}`}>{tarefa.tarefa}</span>

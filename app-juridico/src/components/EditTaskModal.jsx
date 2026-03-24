@@ -4,7 +4,9 @@ import { useTaskStore } from '../store/useTaskStore';
 import { X, Save, Trash2 } from 'lucide-react';
 
 export default function EditTaskModal({ tarefa, onClose }) {
-    const { updateTarefa, deleteTarefa } = useTaskStore();
+    const { updateTarefa, deleteTarefa, user } = useTaskStore();
+    const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'luisoliveira.bb@gmail.com';
+    const isAdmin = user?.email === ADMIN_EMAIL;
 
     const [formData, setFormData] = useState({
         cliente: tarefa.cliente || '',
@@ -12,6 +14,7 @@ export default function EditTaskModal({ tarefa, onClose }) {
         prazo: tarefa.prazo ? new Date(tarefa.prazo).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         status: tarefa.status || 'Gaveta',
         is_urgente: tarefa.is_urgente || false,
+        assigned_to_email: tarefa.assigned_to_email || '',
     });
 
     // Fecha no "ESC"
@@ -23,7 +26,11 @@ export default function EditTaskModal({ tarefa, onClose }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        await updateTarefa(tarefa.id, formData);
+        const updates = { ...formData };
+        if (!isAdmin) {
+            delete updates.assigned_to_email;
+        }
+        await updateTarefa(tarefa.id, updates);
         onClose();
     };
 
@@ -100,6 +107,20 @@ export default function EditTaskModal({ tarefa, onClose }) {
                             </select>
                         </div>
                     </div>
+
+                    {isAdmin && (
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Atribuir a (email do usuário)</label>
+                            <input
+                                type="email"
+                                value={formData.assigned_to_email}
+                                onChange={e => setFormData({ ...formData, assigned_to_email: e.target.value })}
+                                placeholder="ex: usuario@empresa.com"
+                                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
+                            />
+                            <p className="mt-1 text-xs text-slate-500">Se deixado em branco, a tarefa permanecerá disponível apenas para administradores.</p>
+                        </div>
+                    )}
 
                     <div className="flex items-center gap-2 mt-2 p-3 bg-red-50/50 rounded-lg border border-red-100">
                         <input

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { LayoutDashboard, KanbanSquare } from 'lucide-react';
+import { supabase } from './lib/supabase';
 import josiImage from './images/Josi Pixar + Foca.png';
 import Dashboard from './pages/Dashboard';
 import Kanban from './pages/Kanban';
@@ -8,11 +9,66 @@ import { useTaskStore } from './store/useTaskStore';
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const { fetchTarefas } = useTaskStore();
+  const [user, setUser] = useState(null);
+  const { fetchTarefas, setUser: setStoreUser } = useTaskStore();
 
   useEffect(() => {
-    fetchTarefas();
-  }, [fetchTarefas]);
+    const initAuth = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+      setStoreUser(currentUser);
+
+      if (currentUser) {
+        fetchTarefas();
+      }
+    };
+
+    initAuth();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+      setStoreUser(currentUser);
+
+      if (currentUser) {
+        fetchTarefas();
+      }
+    });
+
+    return () => {
+      subscription?.unsubscribe?.();
+    };
+  }, [fetchTarefas, setStoreUser]);
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 px-4">
+        <div className="max-w-md w-full bg-white border border-slate-200 rounded-2xl shadow-sm p-8 text-center">
+          <h1 className="text-2xl font-bold text-slate-800 mb-2">Acesse para continuar</h1>
+          <p className="text-sm text-slate-500 mb-6">Faça login com sua conta Google para acessar suas tarefas com segurança.</p>
+          <button
+            onClick={() => supabase.auth.signInWithOAuth({ provider: 'google' })}
+            className="w-full inline-flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl font-semibold transition"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M21.35 11.1H12v2.8h5.35c-.25 1.35-1 2.5-2.1 3.25v2.75h3.4c1.95-1.8 3.1-4.45 3.1-7.4 0-.5-.05-1-.15-1.45z" fill="#4285F4"/>
+              <path d="M12 22c2.7 0 4.95-.9 6.6-2.45l-3.4-2.75c-.95.65-2.2 1.05-3.2 1.05-2.45 0-4.55-1.65-5.3-3.85H2.1v2.45C3.75 19.9 7.5 22 12 22z" fill="#34A853"/>
+              <path d="M6.7 13.8c-.2-.6-.35-1.2-.35-1.8s.15-1.2.35-1.8V7.75H2.1C1.4 9.15 1 10.55 1 12s.4 2.85 1.1 4.25l4.6-2.45z" fill="#FBBC05"/>
+              <path d="M12 6.45c1.45 0 2.75.5 3.75 1.5l2.8-2.8C16.95 3.5 14.7 2.5 12 2.5 7.5 2.5 3.75 4.6 2.1 7.75l4.6 2.45c.75-2.2 2.85-3.85 5.3-3.85z" fill="#EA4335"/>
+            </svg>
+            Entrar com Google
+          </button>
+          <p className="text-xs text-slate-400 mt-4">Você será redirecionado para autenticação segura.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col md:flex-row h-screen w-full bg-slate-50 font-sans text-slate-900 overflow-hidden">
@@ -24,6 +80,13 @@ function App() {
           <div>
             <h1 className="text-lg font-bold tracking-tight text-slate-800 leading-tight border-b-2 border-indigo-600 inline-block">Dra Josiane</h1>
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mt-1">Novaes</p>
+            <p className="text-xs text-slate-500 mt-1">{user.email}</p>
+            <button
+              onClick={() => supabase.auth.signOut()}
+              className="mt-2 text-xs text-slate-500 hover:text-slate-700"
+            >
+              Sair
+            </button>
           </div>
         </div>
 
