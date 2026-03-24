@@ -79,12 +79,8 @@ export default function Dashboard({ setActiveTab }) {
     }, [showReportModal]);
 
     // Filtros
-    // calcularPrioridade já retorna 'URGENTE' se a tarefa estiver marcada com is_urgente = true
     const hojeDateString = new Date().toISOString().substring(0, 10);
-    const urgentes = tarefas.filter(t => {
-        const isOverdue = t.prazo && t.prazo < hojeDateString;
-        return calcularPrioridade(t.prazo, t.is_urgente) === 'URGENTE' && t.status !== 'Concluído';
-    });
+    const urgentes = tarefas.filter(t => t.is_urgente && t.status !== 'Concluído');
     const hoje = tarefas.filter(t => calcularPrioridade(t.prazo, t.is_urgente) === 'HOJE' && t.status !== 'Concluído');
 
     // KPIs (Métricas de Decisão)
